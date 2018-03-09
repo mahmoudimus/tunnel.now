@@ -26,7 +26,7 @@ if (!localPort) {
 
 const baseTargetUrl = `http://localhost:${localPort}`;
 
-// const uri = `wss://${remoteHostname}:443`;
+//const uri = `wss://${remoteHostname}:443`;
 const uri = `ws://${remoteHostname}:8008`;
 const socket = new WebSocket(uri);
 
@@ -45,45 +45,34 @@ socket.addEventListener("message", ev => {
   } = decodeRequest(ev.data);
 
   console.log(`> ${method} ${url}`);
-
   const response = fetch(`${baseTargetUrl}${url}`, {
-      method,
-      headers,
-      // Alternately, `Buffer.from(body.slice().buffer)`.
-      body: Buffer.from(body.buffer, body.byteOffset, body.length),
-      redirect: "follow"
+    method,
+    headers,
+    // Alternately, `Buffer.from(body.slice().buffer)`.
+    body: Buffer.from(body.buffer, body.byteOffset, body.length),
+    redirect: "follow"
   });
-    /*
-      var buffer = resp.buffer();
-      return new Promise(function(resolve, reject) {
-      resolve([buffer, resp]);
+  response
+    .then((resp) => new Promise(function(resolve, reject) {
+      resp.buffer().then(function(buffer) {
+        resolve({buffer: buffer, response: resp});
       });
-      })
-
-*/
-    response
-        .then((resp) => new Promise(function(resolve, reject) {
-            resp.buffer().then(function(x) {
-                resolve({x: x, resp: resp});
-            });
-        }))
-        .then(resp => {
-            return new Promise(function(resolve, reject) {
-                var encoded = encodeResponse({
-                    id: id,
-                    statusCode: resp.resp.status,
-                    headers: resp.resp.headers,
-                    body: resp.x
-                });
-                console.log(resp.x);
-                socket.send(encoded);
-                resolve(encoded);
-            });
-        })
-        .catch(err => {
-            console.error('dang it');
-            console.error(err);
+    }))
+    .then(resp => {
+      return new Promise(function(resolve, reject) {
+        var encoded = encodeResponse({
+          id: id,
+          statusCode: resp.response.status,
+          headers: resp.response.headers,
+          body: resp.buffer
         });
+        socket.send(encoded);
+        resolve(encoded);
+      });
+    })
+    .catch(err => {
+      console.error(err);
+    });
 });
 
 const keepAliveId = setInterval(() => {
@@ -101,4 +90,10 @@ socket.addEventListener("error", ev => {
   } else {
     console.log(ev.toString());
   }
+});
+
+/* there are some errors that can occur, we should know what they are */
+process.on('uncaughtException', function(err) {
+  console.log(err.stack);
+  throw err;
 });

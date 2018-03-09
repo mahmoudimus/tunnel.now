@@ -42,12 +42,17 @@ const server = createServer((req, res) => {
 
 const handleResponse = message => {
   if (message === "PING") { return; }
-  const { id, statusCode, headers, body } = decodeResponse(message);
+  var decodedMessage = decodeResponse(message);
+  const { id, statusCode, headers, body } = decodedMessage;
   const res = responseRefs[id];
   responseRefs[id] = null;
-
   res.statusCode = statusCode;
-  Object.keys(headers).forEach(key => res.setHeader(key, headers[key]));
+  // sometimes headers is undefined and null, this will crash the server if
+  // that's the case
+  if(typeof headers !== 'undefined' && headers ) {
+    Object.keys(headers).forEach(key => res.setHeader(key, headers[key]));
+  }
+
   // Alternately, `Buffer.from(body.slice().buffer)`.
   res.end(Buffer.from(body.buffer, body.byteOffset, body.length));
 };
@@ -60,11 +65,17 @@ wsServer.on("connection", (ws, req) => {
   activeConnection = ws;
   ws.on("close", () => {
     activeConnection = null;
-      console.log(`Tunnel disconnected from $${remoteIP}.`);
+    console.log(`Tunnel disconnected from $${remoteIP}.`);
   });
   ws.on("message", handleResponse);
 });
 
 server.listen(port, () => {
   console.log(`Listening on port ${server.address().port}...`);
+});
+
+/* there are some errors that can occur, we should know what they are */
+process.on('uncaughtException', function(err) {
+  console.log(err.stack);
+  throw err;
 });
