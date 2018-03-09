@@ -26,8 +26,9 @@ if (!localPort) {
 
 const baseTargetUrl = `http://localhost:${localPort}`;
 
-//const uri = `wss://${remoteHostname}:443`;
-const uri = `ws://${remoteHostname}:8008`;
+const uri = `wss://${remoteHostname}:443`;
+// uncomment the below to debug locally
+//const uri = `ws://${remoteHostname}:8008`;
 const socket = new WebSocket(uri);
 
 socket.addEventListener("open", () => {
