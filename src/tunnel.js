@@ -45,22 +45,44 @@ socket.addEventListener("message", ev => {
 
   console.log(`> ${method} ${url}`);
 
-  fetch(`${baseTargetUrl}${url}`, {
-    method,
-    headers,
-    // Alternately, `Buffer.from(body.slice().buffer)`.
-    body: Buffer.from(body.buffer, body.byteOffset, body.length),
-    redirect: "manual"
-  }).then(response => {
-    return response.buffer().then(body => {
-      socket.send(encodeResponse({
-        id,
-        statusCode: response.status,
-        headers: response.headers,
-        body
-      }));
-    });
+  const response = fetch(`${baseTargetUrl}${url}`, {
+      method,
+      headers,
+      // Alternately, `Buffer.from(body.slice().buffer)`.
+      body: Buffer.from(body.buffer, body.byteOffset, body.length),
+      redirect: "follow"
   });
+    /*
+      var buffer = resp.buffer();
+      return new Promise(function(resolve, reject) {
+      resolve([buffer, resp]);
+      });
+      })
+
+*/
+    response
+        .then((resp) => new Promise(function(resolve, reject) {
+            resp.buffer().then(function(x) {
+                resolve({x: x, resp: resp});
+            });
+        }))
+        .then(resp => {
+            return new Promise(function(resolve, reject) {
+                var encoded = encodeResponse({
+                    id: id,
+                    statusCode: resp.resp.status,
+                    headers: resp.resp.headers,
+                    body: resp.x
+                });
+                console.log(resp.x);
+                socket.send(encoded);
+                resolve(encoded);
+            });
+        })
+        .catch(err => {
+            console.error('dang it');
+            console.error(err);
+        });
 });
 
 const keepAliveId = setInterval(() => {

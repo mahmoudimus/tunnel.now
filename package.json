@@ -29,7 +29,7 @@
   },
   "homepage": "https://github.com/divmain/tunnel.now#readme",
   "dependencies": {
-    "cereal-box": "^1.0.0",
+    "cereal-box": "mahmoudimus/cereal-box#master",
     "execa": "^0.7.0",
     "node-fetch": "^1.7.1",
     "raw-body": "^2.2.0",

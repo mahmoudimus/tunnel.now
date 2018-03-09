@@ -60,7 +60,7 @@ wsServer.on("connection", (ws, req) => {
   activeConnection = ws;
   ws.on("close", () => {
     activeConnection = null;
-    console.log(`Tunnel disconnected from $${remoteIP}.`)
+      console.log(`Tunnel disconnected from $${remoteIP}.`);
   });
   ws.on("message", handleResponse);
 });
