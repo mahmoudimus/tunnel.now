@@ -9,14 +9,16 @@ const {
   response: { encode: encodeResponse }
 } = require("./codec");
 
+const cliArgs = yargs
+ .usage('tunnel.now <remote-hostname> <local-port> [debug]')
+ .help()
+ .argv;
 
-const { _: [ remoteHostname, localPort ] } = yargs
-  .usage('tunnel.now <remote-hostname> <local-port>')
-  .help()
-  .argv;
+const { _: [remoteHostname, localPort] } = cliArgs;
 
 if (!remoteHostname) {
-  console.error("You must supply a name for a remote host, listening on port 443.");
+  let port = cliArgs.debug ? '8008' : '443';
+  console.error(`You must supply a name for a remote host, listening on ${port}`);
   process.exit(1);
 }
 if (!localPort) {
@@ -25,10 +27,8 @@ if (!localPort) {
 }
 
 const baseTargetUrl = `http://localhost:${localPort}`;
+const uri = cliArgs.debug ? `ws://${remoteHostname}:8008` : `wss://${remoteHostname}:443`;
 
-const uri = `wss://${remoteHostname}:443`;
-// uncomment the below to debug locally
-//const uri = `ws://${remoteHostname}:8008`;
 const socket = new WebSocket(uri);
 
 socket.addEventListener("open", () => {
@@ -37,13 +37,14 @@ socket.addEventListener("open", () => {
 });
 
 socket.addEventListener("message", ev => {
+  const decodedReq = decodeRequest(ev.data);
   const {
     id,
     url,
     method,
     headers,
     body
-  } = decodeRequest(ev.data);
+  } = decodedReq;
 
   console.log(`> ${method} ${url}`);
   const response = fetch(`${baseTargetUrl}${url}`, {
@@ -61,7 +62,7 @@ socket.addEventListener("message", ev => {
     }))
     .then(resp => {
       return new Promise(function(resolve, reject) {
-        var encoded = encodeResponse({
+        let encoded = encodeResponse({
           id: id,
           statusCode: resp.response.status,
           headers: resp.response.headers,

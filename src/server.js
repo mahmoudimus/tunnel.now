@@ -42,14 +42,14 @@ const server = createServer((req, res) => {
 
 const handleResponse = message => {
   if (message === "PING") { return; }
-  var decodedMessage = decodeResponse(message);
+  const decodedMessage = decodeResponse(message);
   const { id, statusCode, headers, body } = decodedMessage;
   const res = responseRefs[id];
   responseRefs[id] = null;
   res.statusCode = statusCode;
   // sometimes headers is undefined and null, this will crash the server if
   // that's the case
-  if(typeof headers !== 'undefined' && headers ) {
+  if(typeof headers !== 'undefined' && headers) {
     Object.keys(headers).forEach(key => res.setHeader(key, headers[key]));
   }
 

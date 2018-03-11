@@ -28,10 +28,15 @@
     "url": "https://github.com/divmain/tunnel.now/issues"
   },
   "homepage": "https://github.com/divmain/tunnel.now#readme",
+  "devDependencies": {
+    "nodemon": "^1.17.1"
+  },
   "dependencies": {
     "cereal-box": "mahmoudimus/cereal-box#master",
     "execa": "^0.7.0",
+    "form-data": "^2.3.2",
     "node-fetch": "^1.7.1",
+    "npm": "^5.7.1",
     "raw-body": "^2.2.0",
     "ws": "^3.0.0",
     "yargs": "^8.0.1"
