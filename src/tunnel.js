@@ -52,7 +52,7 @@ socket.addEventListener("message", ev => {
     headers,
     // Alternately, `Buffer.from(body.slice().buffer)`.
     body: Buffer.from(body.buffer, body.byteOffset, body.length),
-    redirect: "follow"
+    redirect: "manual"
   });
   response
     .then((resp) => new Promise(function(resolve, reject) {
@@ -65,7 +65,7 @@ socket.addEventListener("message", ev => {
         let encoded = encodeResponse({
           id: id,
           statusCode: resp.response.status,
-          headers: resp.response.headers,
+          headers: resp.response.headers.raw(),
           body: resp.buffer
         });
         socket.send(encoded);

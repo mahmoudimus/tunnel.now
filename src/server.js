@@ -10,12 +10,12 @@ const {
 } = require("./codec");
 
 
-const { _: [ port = 8008 ] } = yargs
-  .usage('$0 [port]')
+const { _: [ port = 8008 ]} = yargs
+  .usage('$0 [port] [debug]')
   .help()
   .argv;
 
-
+const debug = yargs.argv.debug;
 let activeConnection = null;
 let nextId = 0;
 
@@ -28,7 +28,7 @@ const server = createServer((req, res) => {
 
   getRawBody(req).then(buffer => {
     const id = nextId++;
-    responseRefs[id] = res;
+    responseRefs[id] = [req.url, res];
     activeConnection.send(encodeRequest({
       id,
       url: req.url,
@@ -44,7 +44,12 @@ const handleResponse = message => {
   if (message === "PING") { return; }
   const decodedMessage = decodeResponse(message);
   const { id, statusCode, headers, body } = decodedMessage;
-  const res = responseRefs[id];
+  const [ url, res ]  = responseRefs[id];
+
+  if(debug) {
+    console.log(`Response for ${url}: ${statusCode}`);
+  }
+
   responseRefs[id] = null;
   res.statusCode = statusCode;
   // sometimes headers is undefined and null, this will crash the server if
